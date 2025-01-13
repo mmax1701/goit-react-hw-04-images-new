@@ -1,23 +1,19 @@
-import { Component } from 'react';
 import { Searchbar } from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
+import { useState } from 'react';
 import '../styles.css';
 
-export class App extends Component {
-  state = {
-    inputValue: null,
+export const App = () => {
+  const [inputValue, setInputValue] = useState(null);
+
+  const onSubmit = inputValue => {
+    setInputValue(inputValue);
   };
 
-  onSubmit = inputValue => {
-    this.setState({ inputValue });
-  };
-
-  render() {
-    return (
-      <div className="App">
-        <Searchbar onSubmit={this.onSubmit} />
-        <ImageGallery inputValue={this.state.inputValue} />
-      </div>
-    );
-  }
-}
+  return (
+    <div className="App">
+      <Searchbar onSubmit={onSubmit} />
+      <ImageGallery inputValue={inputValue} />
+    </div>
+  );
+};

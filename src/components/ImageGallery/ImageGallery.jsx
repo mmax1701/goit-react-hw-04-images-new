@@ -1,95 +1,90 @@
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader } from 'components/Loader/Loader';
 import { ImageGalleryItem } from 'components/ImageGalleryItem/ImageGalleryItem';
 import { LoadMore } from 'components/Button/Button';
 import { Modal } from 'components/Modal/Modal';
 import '../../styles.css';
 
-export class ImageGallery extends Component {
-  state = {
-    data: null,
-    loading: false,
-    page: 1,
-    showModal: false,
-    selectedImage: null,
-  };
+export const ImageGallery = ({ inputValue }) => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
-  componentDidUpdate(prevProps, _) {
-    const searchImage = this.props.inputValue;
-
-    if (prevProps.inputValue !== this.props.inputValue) {
-      this.setState({ loading: true });
+  useEffect(() => {
+    if (inputValue) {
+      setLoading(true);
       fetch(
-        `https://pixabay.com/api/?q=${searchImage}&page=${this.state.page}&key=37350286-5f3aac9a725d44d4223b6e61c&image_type=photo&orientation=horizontal&per_page=12`
+        `https://pixabay.com/api/?q=${inputValue}&page=${page}&key=37350286-5f3aac9a725d44d4223b6e61c&image_type=photo&orientation=horizontal&per_page=12`
       )
         .then(res => res.json())
-        .then(data => this.setState({ data }))
-        .finally(() => this.setState({ loading: false, page: 1 }));
+        .then(data => setData(data))
+        .finally(() => setLoading(false, setPage(1)));
     }
-  }
+  }, [inputValue]);
 
-  loadImages = () => {
-    this.setState({ loading: true });
+  const loadImages = () => {
+    setLoading(true);
     fetch(
-      `https://pixabay.com/api/?q=${this.props.inputValue}&page=${
-        this.state.page + 1
+      `https://pixabay.com/api/?q=${inputValue}&page=${
+        page + 1
       }&key=37350286-5f3aac9a725d44d4223b6e61c&image_type=photo&orientation=horizontal&per_page=12`
     )
       .then(res => res.json())
       .then(data =>
-        this.setState(prevState => ({
-          data: { hits: [...prevState.data.hits, ...data.hits] },
-          page: prevState.page + 1,
+        setData(prevState => ({
+          hits: [...prevState.hits, ...data.hits],
         }))
       )
-      .finally(() => this.setState({ loading: false }));
+      .finally(() => setLoading(false, setPage(page + 1)));
   };
 
-  handleKeyDown = e => {
+  const handleKeyDown = e => {
     if (e.code === 'Escape') {
-      this.onCloseModal();
+      onCloseModal();
     }
   };
 
-  handleOverlayClick = e => {
+  const handleOverlayClick = e => {
     if (e.target.classList.contains('Overlay')) {
-      this.onCloseModal();
+      onCloseModal();
     }
   };
 
-  onCloseModal = () => {
-    this.setState({ showModal: false, selectedImage: null });
+  const onCloseModal = () => {
+    setShowModal(false);
+    setSelectedImage(null);
 
-    window.removeEventListener('keydown', this.handleKeyDown);
-    window.removeEventListener('click', this.handleOverlayClick);
+    window.removeEventListener('keydown', handleKeyDown);
+    window.removeEventListener('click', handleOverlayClick);
   };
 
-  onSelectedImage = image => {
-    this.setState({ selectedImage: image, showModal: true });
+  const onSelectedImage = image => {
+    setSelectedImage(image);
+    setShowModal(true);
 
-    window.addEventListener('keydown', this.handleKeyDown);
-    window.addEventListener('click', this.handleOverlayClick);
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('click', handleOverlayClick);
   };
 
-  render() {
-    return (
-      <>
-        {this.state.loading && <Loader />}
-        <ul className="ImageGallery">
-          {this.state.data && (
-            <ImageGalleryItem
-              data={this.state.data.hits}
-              onSelectedImage={this.onSelectedImage}
-            />
-          )}
-          {this.state.data && <LoadMore loadImages={this.loadImages} />}
-        </ul>
-        {this.state.showModal && (
-          <div onClick={this.handleOverlayClick}>
-            <Modal selectedImage={this.state.selectedImage} />
-          </div>
+  return (
+    <>
+      {loading && <Loader />}
+      <ul className="ImageGallery">
+        {data && (
+          <ImageGalleryItem
+            data={data.hits}
+            onSelectedImage={onSelectedImage}
+          />
         )}
-      </>
-    );
-  }
-}
+        {data && <LoadMore loadImages={loadImages} />}
+      </ul>
+      {showModal && (
+        <div onClick={handleOverlayClick}>
+          <Modal selectedImage={selectedImage} />
+        </div>
+      )}
+    </>
+  );
+};
